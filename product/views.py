@@ -8,8 +8,9 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from .filters import ProductFilter
-from .models import Product, Category
-from .serializers import ProductSerializer, CategorySerializer, CreateUpdateProductSerializer
+from .models import Product, Category, Comment
+from .serializers import ProductSerializer, CategorySerializer, CreateUpdateProductSerializer, \
+    CommentSerializer, ProductListSerializer
 
 
 class MyPagination(PageNumberPagination):
@@ -23,7 +24,9 @@ class ProductViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
 
     def get_serializer_class(self):
-        if self.action == 'list' or self.retrieve == 'retrieve':
+        if self.action == 'list':
+            return ProductListSerializer
+        elif self.action == 'retrieve':
             return ProductSerializer
         else:
             return CreateUpdateProductSerializer
@@ -76,3 +79,12 @@ class ProductViewSet(viewsets.ModelViewSet):
 class CategoriesList(ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+
+class CommentCreate(CreateAPIView):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    permission_classes = [per.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
